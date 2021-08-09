@@ -1,17 +1,12 @@
-FROM debian:buster-slim
+FROM alpine:3.14.0
 
-LABEL maintainer="dortiz@devops.faith"
+LABEL maintainer="phat.dangthanh@pharmacity.vn"
 
-RUN apt-get update && \
-	apt-get install -y ca-certificates && \
-	update-ca-certificates && \
-	rm -rf /var/lib/apt/lists/*
+RUN apk update && apk add --no-cache \
+	  curl \
+    &&  rm -rf /var/cache/apk/*
 
 ADD krakend /usr/bin/krakend
-
-RUN useradd -r -c "KrakenD user" -U krakend
-
-USER krakend
 
 VOLUME [ "/etc/krakend" ]
 
