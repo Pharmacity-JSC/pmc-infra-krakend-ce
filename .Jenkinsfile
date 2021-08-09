@@ -71,6 +71,7 @@ node('master-local'){
   }
 
   stage("Build krakend"){
+    println('Building krakend with go')
     sh 'make build'
   }
 
