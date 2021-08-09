@@ -21,7 +21,6 @@ node('master-local'){
     // gitBranchName2 = scm.branches[0].name.split("/")[1]
     gitBranchName = gitBranchName.substring(gitBranchName.lastIndexOf('/')+1, gitBranchName.length())
     shortGitCommit = "${myRepo.GIT_COMMIT[0..10]}"
-    gitBranchName = 'staging'
     if(gitBranchName == 'master' || gitBranchName == 'main' || gitBranchName == 'production')
     {
       echo "Working on branch ${gitBranchName}...!"
