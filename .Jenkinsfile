@@ -1,10 +1,10 @@
 properties([pipelineTriggers([githubPush()])])
 node('master-local'){
   def namespace = 'pharmacy'
-  def imageName = 'pmc-krakend-ce'
-  def releaseName = 'pmc-krakend-ce'
+  def imageName = 'pmc-infra-krakend-ce'
+  def releaseName = 'pmc-infra-krakend-ce'
   def chartName = 'general-application'
-  def repository = 'https://github.com/Pharmacity-JSC/pmc-krakend-ce'
+  def repository = 'https://github.com/Pharmacity-JSC/pmc-infra-krakend-ce'
   def environment
   def myRepo
   def gitBranchName
@@ -21,6 +21,7 @@ node('master-local'){
     // gitBranchName2 = scm.branches[0].name.split("/")[1]
     gitBranchName = gitBranchName.substring(gitBranchName.lastIndexOf('/')+1, gitBranchName.length())
     shortGitCommit = "${myRepo.GIT_COMMIT[0..10]}"
+    gitBranchName = 'develop'
     if(gitBranchName == 'master' || gitBranchName == 'main' || gitBranchName == 'production')
     {
       echo "Working on branch ${gitBranchName}...!"
