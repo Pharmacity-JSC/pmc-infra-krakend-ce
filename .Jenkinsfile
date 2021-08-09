@@ -75,19 +75,19 @@ node('master-local'){
     sh 'make build'
   }
 
-  // stage('Build docker') {
-  //   withCredentials([string(credentialsId: 'aws_ecr_account_url', variable: 'ecr_url'), string(credentialsId: 'aws_default_region', variable: 'aws_region')]) {
-  //     withEnv(["AWS_DEFAULT_REGION=${aws_region}",
-  //       "AWS_ACCESS_KEY_ID=${awsAccessKeyID}",
-  //       "AWS_SECRET_ACCESS_KEY=${awsSecretKeyID}"]){
-  //       sh "set +x; aws ecr describe-repositories --repository-names ${imageName} 2>&1 > /dev/null || aws ecr create-repository --repository-name ${imageName} --image-scanning-configuration scanOnPush=true"
-  //       docker.withRegistry("https://${ecr_url}", "ecr:${aws_region}:${awsAccount}") {
-  //         def dockerImage = docker.build("${imageName}:${dockerImageTag}","-t ${imageName}:${dockerImageTagLatest} .")
-  //         dockerImage.push()
-  //         dockerImage.push("${dockerImageTagLatest}")
-  //       }
-  //       echo "[SUCCESS] Push image ${imageName}:${dockerImageTag} and ${imageName}:${dockerImageTagLatest} to ECR"  
-  //     }
-  //   }
-  // }
+  stage('Build docker') {
+    withCredentials([string(credentialsId: 'aws_ecr_account_url', variable: 'ecr_url'), string(credentialsId: 'aws_default_region', variable: 'aws_region')]) {
+      withEnv(["AWS_DEFAULT_REGION=${aws_region}",
+        "AWS_ACCESS_KEY_ID=${awsAccessKeyID}",
+        "AWS_SECRET_ACCESS_KEY=${awsSecretKeyID}"]){
+        sh "set +x; aws ecr describe-repositories --repository-names ${imageName} 2>&1 > /dev/null || aws ecr create-repository --repository-name ${imageName} --image-scanning-configuration scanOnPush=true"
+        docker.withRegistry("https://${ecr_url}", "ecr:${aws_region}:${awsAccount}") {
+          def dockerImage = docker.build("${imageName}:${dockerImageTag}","-t ${imageName}:${dockerImageTagLatest} .")
+          dockerImage.push()
+          dockerImage.push("${dockerImageTagLatest}")
+        }
+        echo "[SUCCESS] Push image ${imageName}:${dockerImageTag} and ${imageName}:${dockerImageTagLatest} to ECR"  
+      }
+    }
+  }
 }
