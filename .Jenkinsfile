@@ -71,7 +71,8 @@ node('master-local'){
   }
 
   stage("Build krakend"){
-    println('Building krakend with go')
+    println('Building krakend with golang')
+    sh '[ -f krakend ] && rm krakend || echo "File does not exist !"'
     sh 'make build'
   }
 
