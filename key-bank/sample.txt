@@ -1,0 +1,85 @@
+How to import certificate into keystore
+--------------------------------------------------------------------------------------------------------------------
+1) Import the signed certificate and private keys into a PKCS12 keystore using openssl
+
+      > openssl pkcs12 -export -in <client.cer> -inkey <csr_key.pem> -out client.keystore.p12 -name <client>
+
+2) Import the certificate from PKCS12 keystore into the Java keystore
+
+     > keytool -importkeystore -deststorepass <password> -destkeypass <password>  -destkeystore scb-api-banking.jks -srckeystore client.keystore.p12  -srcstoretype PKCS12 -srcstorepass <password> -alias <client>
+
+Here the token values are as follows
+     client.cer     -> Client Certificate attached in the APIBaniking package email
+     csr_key.pem    -> Private key used to create the CSR sent to SCB
+     client         -> Your choosen alias name for the certificate and key import
+     password       -> your choosen password
+--------------------------------------------------------------------------------------------------------------------
+
+
+Create Payload from activation Key
+--------------------------------------------------------------------------------------------------------------------
+String payload = {
+       "enableWebHook":"<true/false>",
+       "webHookUrl":"<DISABLED if enableWebHook is false/url if true>",
+       "activationKey": <content of activationKey.json as attached in APIBanking package email>
+    }
+--------------------------------------------------------------------------------------------------------------------
+
+
+Sample to create JWT token (Java)
+--
+Make sure you have setup keystore generated above as client keystore for JVM. This makes sure that client cert can be
+presented to SCB for authentication.
+--------------------------------------------------------------------------------------------------------------------
+String token = createToken(keystore, payload);
+
+HttpPost httpPost = new HttpPost("https://api.standardchartered.com/activate");
+httpPost.setEntity(new StringEntity(token));
+httpPost.addHeader("ResponseEncryptionType", "AES256Signed");
+response = httpClient.execute(httpPost);
+
+public String createToken(Keystore keystore, Object payload) {
+
+        Gson gson = Converters.registerAll(new GsonBuilder()).create();
+        RSPrivateKey privateKey = (PrivateKey) keyStore.getKey("<alias of your signing key>", "<key password>"));
+        RsaSHA256Signer signer;
+        try {
+            signer = new RsaSHA256Signer("SCB", null, (RSAPrivateKey) privateKey);
+
+            //Configure JSON token
+            JsonToken token = new JsonToken(signer);
+            token.setParam("jti", tokenPrototype.getMessageId());
+            token.setAudience("SCB-APIBanking");
+
+            long issueTime = currentTimeMillis() - jwtIssueTimeOffset;
+            token.setIssuedAt(new Instant(issueTime));
+            token.setExpiration(new Instant(issueTime + (1000L * 30L)));
+
+            //Configure request object, which provides information of the item
+            JsonObject payloadO = token.getPayloadAsJsonObject();
+            payloadO.add(PAYLOAD, gson.toJsonTree(payload));
+            return token.serializeAndSign();
+
+        } catch (SignatureException | InvalidKeyException e) {
+            throw new RuntimeException(e);
+        }
+    }
+--------------------------------------------------------------------------------------------------------------------
+###You need install java
+
+keytool -genkeypair -keysize 2048 -keyalg RSA -alias apibanking-sig-key -keystore scb-api-banking.jks
+keytool -list -keystore scb-api-banking.jks -storepass hkcG2xZcheLTs1v9
+keytool -exportcert -keystore scb-api-banking.jks -alias apibanking-sig-key -rfc -file certificate.pem
+openssl x509 -pubkey -noout -in certificate.pem > pubkey.pem
+openssl genrsa -out ./scb-apibanking-client-cert-private-key.pem 2048
+openssl req -new -sha256 -key scb-apibanking-client-cert-private-key.pem -out ./scb-apibanking-client-cert-csr.pem
+
+openssl pkcs12 -export -in client.cer -inkey scb-apibanking-client-cert-private-key.pem -out scb-apibanking.keystore.p12 -name pharmacity
+keytool -importkeystore -deststorepass hkcG2xZcheLTs1v9 -destkeypass hkcG2xZcheLTs1v9 -destkeystore scb-api-banking.jks -srckeystore scb-apibanking.keystore.p12 -srcstoretype PKCS12 -srcstorepass hkcG2xZcheLTs1v9 -alias pharmacity
+keytool -list -keystore scb-api-banking.jks -storepass hkcG2xZcheLTs1v9
+
+openssl pkcs12 -export -in client.cer -inkey scb-apibanking-client-cert-private-key.pem -out client.keystore.p12 -name pharmacity
+keytool -importkeystore -deststorepass hkcG2xZcheLTs1v9 -destkeypass hkcG2xZcheLTs1v9  -destkeystore scb-api-banking.jks -srckeystore client.keystore.p12  -srcstoretype PKCS12 -srcstorepass hkcG2xZcheLTs1v9 -alias pharmacity
+
+keytool -importkeystore -srckeystore scb-api-banking.jks -destkeystore scb-api-banking.p12 -deststoretype PKCS12 -srcalias apibanking-sig-key -deststorepass hkcG2xZcheLTs1v9 -destkeypass hkcG2xZcheLTs1v9
+openssl pkcs12 -in scb-api-banking.p12  -nodes -nocerts -out scb-api-banking-privatekey.pem  

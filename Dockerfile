@@ -5,7 +5,8 @@ ENV GLIBC_REPO=https://github.com/sgerrand/alpine-pkg-glibc
 ENV GLIBC_VERSION=2.30-r0
 
 RUN set -ex && \
-    apk --update add --no-cache libstdc++ curl ca-certificates && \
+    apk --update add --no-cache libstdc++ curl ca-certificates openssl openjdk11 && \
+    mkdir /data && \
     for pkg in glibc-${GLIBC_VERSION} glibc-bin-${GLIBC_VERSION}; \
         do curl -sSL ${GLIBC_REPO}/releases/download/${GLIBC_VERSION}/${pkg}.apk -o /tmp/${pkg}.apk; done && \
     apk add --allow-untrusted /tmp/*.apk && \
@@ -16,6 +17,7 @@ RUN set -ex && \
 WORKDIR /etc/krakend
 
 ADD krakend /usr/bin/krakend
+ADD key-bank /data
 
 VOLUME [ "/etc/krakend" ]
 
