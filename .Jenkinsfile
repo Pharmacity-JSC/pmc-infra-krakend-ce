@@ -21,7 +21,7 @@ node('master-local'){
         // gitBranchName2 = scm.branches[0].name.split("/")[1]
         gitBranchName = gitBranchName.substring(gitBranchName.lastIndexOf('/')+1, gitBranchName.length())
         shortGitCommit = "${myRepo.GIT_COMMIT[0..10]}"
-        if(gitBranchName == 'master' || gitBranchName == 'krakend-ce')
+        if(gitBranchName == 'master')
         {
             echo "Working on branch ${gitBranchName}...!"
             environment = 'production'
@@ -50,11 +50,12 @@ node('master-local'){
         else if(gitBranchName == 'krakend-ce')
         {
             echo "Working on branch ${gitBranchName}...!"
-            
+
             environment = 'krakend-ce'
             eksClusterDefault = 'stg-eks-main'
             awsAccount = 'aws_account_stag'
-
+            
+            imageName = "krakend-ce"
             dockerImageTag = "${shortGitCommit}"
             dockerImageTagLatest = "latest"
             
