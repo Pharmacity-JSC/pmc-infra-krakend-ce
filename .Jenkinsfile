@@ -50,10 +50,10 @@ node('master-local'){
         else if(gitBranchName == 'krakend-ce')
         {
             echo "Working on branch ${gitBranchName}...!"
-            environment = 'staging'
+            environment = 'krakend-ce'
             eksClusterDefault = 'stg-eks-main'
             awsAccount = 'aws_account_stag'
-            
+
             dockerImageTag = "${shortGitCommit}"
             dockerImageTagLatest = "latest"
             
