@@ -21,52 +21,66 @@ node('master-local'){
         // gitBranchName2 = scm.branches[0].name.split("/")[1]
         gitBranchName = gitBranchName.substring(gitBranchName.lastIndexOf('/')+1, gitBranchName.length())
         shortGitCommit = "${myRepo.GIT_COMMIT[0..10]}"
-        if(gitBranchName == 'master' || gitBranchName == 'main' || gitBranchName == 'production')
+        if(gitBranchName == 'master' || gitBranchName == 'krakend-ce')
         {
-        echo "Working on branch ${gitBranchName}...!"
-        environment = 'production'
-        eksClusterDefault = 'prod-eks-main'
-        awsAccount = 'aws_account_prod'
-        dockerImageTag = "${environment}.${shortGitCommit}"
-        dockerImageTagLatest = "${environment}.latest"
-        withCredentials([aws(credentialsId: 'aws_account_prod', accessKeyVariable: 'aws_access_key_id', secretKeyVariable: 'aws_secret_access_key')]) {
-            awsAccessKeyID = "${aws_access_key_id}"
-            awsSecretKeyID = "${aws_secret_access_key}"
-        }
+            echo "Working on branch ${gitBranchName}...!"
+            environment = 'production'
+            eksClusterDefault = 'prod-eks-main'
+            awsAccount = 'aws_account_prod'
+            dockerImageTag = "${environment}.${shortGitCommit}"
+            dockerImageTagLatest = "${environment}.latest"
+            withCredentials([aws(credentialsId: 'aws_account_prod', accessKeyVariable: 'aws_access_key_id', secretKeyVariable: 'aws_secret_access_key')]) {
+                awsAccessKeyID = "${aws_access_key_id}"
+                awsSecretKeyID = "${aws_secret_access_key}"
+            }
         }  
-        else if(gitBranchName == 'staging' || gitBranchName == 'stag' || gitBranchName == 'stg')
+        else if(gitBranchName == 'staging')
         {
-        echo "Working on branch ${gitBranchName}...!"
-        environment = 'staging'
-        eksClusterDefault = 'stg-eks-main'
-        awsAccount = 'aws_account_stag'
-        dockerImageTag = "${environment}.${shortGitCommit}"
-        dockerImageTagLatest = "${environment}.latest"
-        withCredentials([aws(credentialsId: 'aws_account_stag', accessKeyVariable: 'aws_access_key_id', secretKeyVariable: 'aws_secret_access_key')]) {
-            awsAccessKeyID = "${aws_access_key_id}"
-            awsSecretKeyID = "${aws_secret_access_key}"
+            echo "Working on branch ${gitBranchName}...!"
+            environment = 'staging'
+            eksClusterDefault = 'stg-eks-main'
+            awsAccount = 'aws_account_stag'
+            dockerImageTag = "${environment}.${shortGitCommit}"
+            dockerImageTagLatest = "${environment}.latest"
+            withCredentials([aws(credentialsId: 'aws_account_stag', accessKeyVariable: 'aws_access_key_id', secretKeyVariable: 'aws_secret_access_key')]) {
+                awsAccessKeyID = "${aws_access_key_id}"
+                awsSecretKeyID = "${aws_secret_access_key}"
+            }
         }
+        else if(gitBranchName == 'krakend-ce')
+        {
+            echo "Working on branch ${gitBranchName}...!"
+            environment = 'staging'
+            eksClusterDefault = 'stg-eks-main'
+            awsAccount = 'aws_account_stag'
+            dockerImageTag = "${shortGitCommit}"
+            dockerImageTagLatest = "latest"
+            
+            withCredentials([aws(credentialsId: 'aws_account_stag', accessKeyVariable: 'aws_access_key_id', secretKeyVariable: 'aws_secret_access_key')]) {
+                awsAccessKeyID = "${aws_access_key_id}"
+                awsSecretKeyID = "${aws_secret_access_key}"
+            }
         }
         else
         {
-        echo "Working on branch ${gitBranchName}...!"
-        environment = 'development'
-        namespace = 'pmc-testing'
-        eksClusterDefault = 'stg-eks-main'
-        awsAccount = 'aws_account_stag'
-        dockerImageTag = "${environment}.${shortGitCommit}"
-        dockerImageTagLatest = "${environment}.latest"
-        withCredentials([aws(credentialsId: 'aws_account_stag', accessKeyVariable: 'aws_access_key_id', secretKeyVariable: 'aws_secret_access_key')]) {
-            awsAccessKeyID = "${aws_access_key_id}"
-            awsSecretKeyID = "${aws_secret_access_key}"
-        }
+            echo "Working on branch ${gitBranchName}...!"
+            environment = 'development'
+            namespace = 'pmc-testing'
+            eksClusterDefault = 'stg-eks-main'
+            awsAccount = 'aws_account_stag'
+            dockerImageTag = "${environment}.${shortGitCommit}"
+            dockerImageTagLatest = "${environment}.latest"
+            withCredentials([aws(credentialsId: 'aws_account_stag', accessKeyVariable: 'aws_access_key_id', secretKeyVariable: 'aws_secret_access_key')]) {
+                awsAccessKeyID = "${aws_access_key_id}"
+                awsSecretKeyID = "${aws_secret_access_key}"
+            }
         }
     }
 
     stage("Slack") {
         slackSend(
-        color: "good", 
-        message: "Project ${repository} is building...!\nOn branch ${gitBranchName}"
+            color: "good", 
+            message: "Project ${repository} is building...!\nOn branch ${gitBranchName}"
         )
     }
 
@@ -84,8 +98,8 @@ node('master-local'){
             sh "set +x; aws ecr describe-repositories --repository-names ${imageName} 2>&1 > /dev/null || aws ecr create-repository --repository-name ${imageName} --image-scanning-configuration scanOnPush=true"
             docker.withRegistry("https://${ecr_url}", "ecr:${aws_region}:${awsAccount}") {
             def dockerImage = docker.build("${imageName}:${dockerImageTag}","-t ${imageName}:${dockerImageTagLatest} .")
-            dockerImage.push()
-            dockerImage.push("${dockerImageTagLatest}")
+                dockerImage.push()
+                dockerImage.push("${dockerImageTagLatest}")
             }
             echo "[SUCCESS] Push image ${imageName}:${dockerImageTag} and ${imageName}:${dockerImageTagLatest} to ECR"  
         }
