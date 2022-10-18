@@ -1,31 +1,25 @@
-ARG GOLANG_VERSION
-ARG ALPINE_VERSION
-FROM golang:${GOLANG_VERSION}-alpine${ALPINE_VERSION} as builder
+FROM alpine:3.14.0
 
-RUN apk --no-cache add make gcc musl-dev binutils-gold
+LABEL maintainer="phat.dangthanh@pharmacity.vn"
+ENV GLIBC_REPO=https://github.com/sgerrand/alpine-pkg-glibc
+ENV GLIBC_VERSION=2.30-r0
 
-COPY . /app
-WORKDIR /app
-
-RUN make build
-
-
-FROM alpine:${ALPINE_VERSION}
-
-LABEL maintainer="community@krakend.io"
-
-RUN apk add --no-cache ca-certificates && \
-    adduser -u 1000 -S -D -H krakend && \
-    mkdir /etc/krakend && \
-    echo '{ "version": 3 }' > /etc/krakend/krakend.json
-
-COPY --from=builder /app/krakend /usr/bin/krakend
-
-USER 1000
+RUN set -ex && \
+    apk --update add --no-cache libstdc++ curl ca-certificates && \
+    for pkg in glibc-${GLIBC_VERSION} glibc-bin-${GLIBC_VERSION}; \
+        do curl -sSL ${GLIBC_REPO}/releases/download/${GLIBC_VERSION}/${pkg}.apk -o /tmp/${pkg}.apk; done && \
+    apk add --allow-untrusted /tmp/*.apk && \
+    rm -v /tmp/*.apk && \
+    /usr/glibc-compat/sbin/ldconfig /lib /usr/glibc-compat/lib \
+    &&  rm -rf /var/cache/apk/*
 
 WORKDIR /etc/krakend
+
+ADD krakend /usr/bin/krakend
+
+VOLUME [ "/etc/krakend" ]
 
 ENTRYPOINT [ "/usr/bin/krakend" ]
 CMD [ "run", "-c", "/etc/krakend/krakend.json" ]
 
-EXPOSE 8000 8090
+EXPOSE 8000 8090 9091
