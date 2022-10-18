@@ -50,6 +50,7 @@ node('master-local'){
         else if(gitBranchName == 'krakend-ce')
         {
             echo "Working on branch ${gitBranchName}...!"
+            
             environment = 'krakend-ce'
             eksClusterDefault = 'stg-eks-main'
             awsAccount = 'aws_account_stag'
