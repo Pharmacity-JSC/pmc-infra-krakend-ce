@@ -19,7 +19,7 @@ WORKDIR /etc/krakend
 ADD krakend /usr/bin/krakend
 ADD key-bank /data
 
-RUN openssl pkcs12 -export -in client.cer -inkey /data/scb-apibanking-client-cert-private-key.pem -out /data/scb-apibanking.keystore.p12 -name pharmacity -password pass:hkcG2xZcheLTs1v9
+RUN openssl pkcs12 -export -in /data/client.cer -inkey /data/scb-apibanking-client-cert-private-key.pem -out /data/scb-apibanking.keystore.p12 -name pharmacity -password pass:hkcG2xZcheLTs1v9
 RUN keytool -importkeystore -deststorepass hkcG2xZcheLTs1v9 -destkeypass hkcG2xZcheLTs1v9 -destkeystore /data/scb-api-banking.jks -srckeystore /data/scb-apibanking.keystore.p12 -srcstoretype PKCS12 -srcstorepass hkcG2xZcheLTs1v9 -alias pharmacity
 RUN keytool -list -keystore /data/scb-api-banking.jks -storepass hkcG2xZcheLTs1v9
 
