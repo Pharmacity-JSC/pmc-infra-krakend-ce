@@ -53,6 +53,7 @@ node('master-local'){
             environment = 'staging'
             eksClusterDefault = 'stg-eks-main'
             awsAccount = 'aws_account_stag'
+            
             dockerImageTag = "${shortGitCommit}"
             dockerImageTagLatest = "latest"
             
