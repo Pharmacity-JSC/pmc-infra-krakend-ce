@@ -1,7 +1,7 @@
 properties([pipelineTriggers([githubPush()])])
 node('master-local'){
   def namespace = 'pharmacy'
-  def imageName = 'pmc-infra-krakend-ce'
+  def imageName = 'krakend-ce'
   def releaseName = 'pmc-infra-krakend-ce'
   def chartName = 'general-application'
   def repository = 'https://github.com/Pharmacity-JSC/pmc-infra-krakend-ce'
