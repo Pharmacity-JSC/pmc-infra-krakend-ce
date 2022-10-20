@@ -5,6 +5,7 @@ node('master-local'){
   def releaseName = 'pmc-infra-krakend-ce'
   def chartName = 'general-application'
   def repository = 'https://github.com/Pharmacity-JSC/pmc-infra-krakend-ce'
+  def configVersion = 'config2'
   def environment
   def myRepo
   def gitBranchName
@@ -27,8 +28,8 @@ node('master-local'){
       environment = 'production'
       eksClusterDefault = 'prod-eks-main'
       awsAccount = 'aws_account_prod'
-      dockerImageTag = "${environment}.${shortGitCommit}"
-      dockerImageTagLatest = "${environment}.latest"
+      dockerImageTag = "${configVersion}.${shortGitCommit}"
+      dockerImageTagLatest = "${configVersion}.latest"
       withCredentials([aws(credentialsId: 'aws_account_prod', accessKeyVariable: 'aws_access_key_id', secretKeyVariable: 'aws_secret_access_key')]) {
         awsAccessKeyID = "${aws_access_key_id}"
         awsSecretKeyID = "${aws_secret_access_key}"
